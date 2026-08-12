@@ -30,7 +30,7 @@ export default function Home() {
   const sorted = useMemo(() => [...stocks].sort((a, b) => score(b) - score(a)), []);
   return <main className="app-shell">
     <aside className="sidebar">
-      <div className="brand"><span>证</span><div><b>证析 AI</b><small>EVIDENCE LAB</small></div></div>
+      <div className="brand"><span>PY</span><div><b>PY股票AI操作盘</b><small>STOCK AI DESK</small></div></div>
       <nav aria-label="主导航">
         <button className={tab === "research" ? "active" : ""} onClick={() => setTab("research")}><span>⌂</span>研究驾驶舱</button>
         <button className={tab === "calibration" ? "active" : ""} onClick={() => setTab("calibration")}><span>◎</span>信号校准</button>
