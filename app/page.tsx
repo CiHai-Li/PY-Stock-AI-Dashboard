@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import ResearchLab from "./research-lab";
 
 type Stock = {
   code: string; name: string; market: string; price: number; change: number;
@@ -25,13 +26,13 @@ function MiniTrend({ down = false }: { down?: boolean }) {
 
 export default function Home() {
   const [selectedCode, setSelectedCode] = useState("600519");
-  const [tab, setTab] = useState<"research" | "calibration" | "portfolio">("research");
+  const [tab, setTab] = useState<"research" | "calibration" | "portfolio" | "lab">("research");
   const selected = stocks.find((stock) => stock.code === selectedCode) ?? stocks[0];
   const sorted = useMemo(() => [...stocks].sort((a, b) => score(b) - score(a)), []);
   return <main className="app-shell">
     <aside className="sidebar">
       <div className="brand"><span>PY</span><div><b>PY股票AI操作盘</b><small>STOCK AI DESK</small></div></div>
-      <nav aria-label="主导航">
+      <nav aria-label="主导航"><button className={tab === "lab" ? "active" : ""} onClick={() => setTab("lab")}><span>◇</span>数据与评估实验室</button>
         <button className={tab === "research" ? "active" : ""} onClick={() => setTab("research")}><span>⌂</span>研究驾驶舱</button>
         <button className={tab === "calibration" ? "active" : ""} onClick={() => setTab("calibration")}><span>◎</span>信号校准</button>
         <button className={tab === "portfolio" ? "active" : ""} onClick={() => setTab("portfolio")}><span>◫</span>组合风险</button>
@@ -40,7 +41,7 @@ export default function Home() {
       <div className="version"><i /> 演示数据 · v1.0</div>
     </aside>
     <section className="workspace">
-      <header><div><span>股票研究决策助手</span><b>数据截至 2026-08-12 16:10</b></div><div className="header-actions"><button>导出研究纪要</button><span>示</span></div></header>
+      <header><div><span>股票研究决策助手</span><b>数据截至 2026-08-12 16:10</b></div><div className="header-actions"><button onClick={() => setTab("lab")}>导入与导出研究数据</button><span>示</span></div></header>
       <div className="content">
         {tab === "research" && <>
           <section className="hero"><div><span className="eyebrow">今日研究摘要</span><h1>把 AI 的“判断”，变成可以核验的研究结论</h1><p>统一数据口径、确定性评分、来源证据和历史校准，让每个信号都能说明“为什么”。</p></div><div className="hero-score"><span>研究覆盖</span><b>5</b><small>只核心标的</small></div></section>
@@ -62,7 +63,7 @@ export default function Home() {
           </section>
           <section className="bottom-grid"><article className="panel calibration-card"><div className="panel-title"><div><h2>历史信号校准</h2><p>评分不是感觉，而是可复盘的概率分层</p></div><button onClick={() => setTab("calibration")}>查看完整回测 →</button></div><div className="bars">{[["80–100",68,"+12.4%"],["60–79",57,"+5.1%"],["40–59",49,"-0.8%"],["0–39",36,"-9.3%"]].map(item=><div key={item[0]}><span>{item[0]}</span><i><em style={{width:`${item[1]}%`}} /></i><b>{item[1]}% 命中</b><small>{item[2]}</small></div>)}</div></article><article className="panel quality-card"><div className="panel-title"><div><h2>数据质量</h2><p>每个结论都显示数据边界</p></div><span className="healthy">健康</span></div>{[["行情数据","实时","100%"],["财务数据","2026 Q2","96%"],["新闻事件","近7日","88%"]].map(item=><div className="source" key={item[0]}><i /><b>{item[0]}</b><span>{item[1]}</span><em>{item[2]}</em></div>)}</article></section>
         </>}
-        {tab === "calibration" && <Calibration />}
+        {tab === "lab" && <ResearchLab />}{tab === "calibration" && <Calibration />}
         {tab === "portfolio" && <Portfolio />}
       </div>
     </section>
@@ -70,9 +71,9 @@ export default function Home() {
 }
 
 function Calibration() {
-  return <section className="subpage"><span className="eyebrow">模型验证</span><h1>信号校准中心</h1><p className="lead">用滚动窗口回测检查评分、命中率与收益是否一致，避免“高置信度”只是语言标签。</p><div className="calibration-grid"><article className="panel"><h2>90日滚动表现</h2><div className="chart-area"><div className="chart-line" /><div className="chart-baseline" /><span>策略累计收益 12.4%</span><small>沪深300同期 5.1%</small></div></article><article className="panel metrics"><h2>验证指标</h2>{[["年化收益","18.6%"],["最大回撤","-8.2%"],["夏普比率","1.34"],["换手成本","0.7%"]].map(item=><div key={item[0]}><span>{item[0]}</span><b>{item[1]}</b></div>)}</article></div><article className="panel methodology"><h2>校准方法</h2><div>{["严格按历史时点取数，避免未来数据泄漏","使用滚动训练/测试窗口，避免一次性回测过拟合","计入手续费、滑点与无法成交场景","按市场阶段拆分牛市、震荡与下跌表现"].map((x,i)=><p key={x}><span>{i+1}</span>{x}</p>)}</div></article></section>;
+  return <section className="subpage"><span className="eyebrow">模型验证</span><h1>信号校准中心</h1><p className="lead">用滚动窗口回测检查评分、命中率与收益是否一致，避免“高置信度”只是语言标签。</p><div className="calibration-grid"><article className="panel"><h2>90日滚动表现（预设演示，非实际回测）</h2><div className="chart-area"><div className="chart-line" /><div className="chart-baseline" /><span>策略累计收益 12.4%</span><small>沪深300同期 5.1%</small></div></article><article className="panel metrics"><h2>验证指标</h2>{[["年化收益","18.6%"],["最大回撤","-8.2%"],["夏普比率","1.34"],["换手成本","0.7%"]].map(item=><div key={item[0]}><span>{item[0]}</span><b>{item[1]}</b></div>)}</article></div><article className="panel methodology"><h2>校准方法</h2><div>{["严格按历史时点取数，避免未来数据泄漏","使用滚动训练/测试窗口，避免一次性回测过拟合","计入手续费、滑点与无法成交场景","按市场阶段拆分牛市、震荡与下跌表现"].map((x,i)=><p key={x}><span>{i+1}</span>{x}</p>)}</div></article></section>;
 }
 
 function Portfolio() {
-  return <section className="subpage"><span className="eyebrow">组合视角</span><h1>组合风险工作台</h1><p className="lead">单股结论进入组合后，继续检查集中度、相关性与最大潜在损失。</p><section className="portfolio-kpis"><article><span>组合风险等级</span><b>中低</b></article><article><span>预估年化波动</span><b>16.2%</b></article><article><span>单日 95% VaR</span><b>-2.1%</b></article></section><div className="calibration-grid"><article className="panel allocation"><h2>行业配置</h2>{[["消费",26],["科技",24],["新能源",18],["金融",14],["现金",18]].map(item=><div key={item[0]}><span>{item[0]}</span><i><em style={{width:`${item[1]}%`}} /></i><b>{item[1]}%</b></div>)}</article><article className="panel risk-list"><h2>主要风险</h2><p><span>01</span><b>成长风格相关性偏高</b><small>腾讯、宁德时代在风险偏好下降时可能同步回撤。</small></p><p><span>02</span><b>新能源行业波动较大</b><small>建议将单一行业敞口控制在20%以内。</small></p><p><span>03</span><b>现金缓冲充足</b><small>18%现金可用于控制回撤并等待新信号。</small></p></article></div></section>;
+  return <section className="subpage"><span className="eyebrow">组合视角</span><h1>组合风险工作台</h1><p className="lead">单股结论进入组合后，继续检查集中度、相关性与最大潜在损失。</p><section className="portfolio-kpis"><article><span>组合风险等级（演示）</span><b>中低</b></article><article><span>预估年化波动</span><b>16.2%</b></article><article><span>单日 95% VaR</span><b>-2.1%</b></article></section><div className="calibration-grid"><article className="panel allocation"><h2>行业配置</h2>{[["消费",26],["科技",24],["新能源",18],["金融",14],["现金",18]].map(item=><div key={item[0]}><span>{item[0]}</span><i><em style={{width:`${item[1]}%`}} /></i><b>{item[1]}%</b></div>)}</article><article className="panel risk-list"><h2>主要风险</h2><p><span>01</span><b>成长风格相关性偏高</b><small>腾讯、宁德时代在风险偏好下降时可能同步回撤。</small></p><p><span>02</span><b>新能源行业波动较大</b><small>建议将单一行业敞口控制在20%以内。</small></p><p><span>03</span><b>现金缓冲充足</b><small>18%现金可用于控制回撤并等待新信号。</small></p></article></div></section>;
 }

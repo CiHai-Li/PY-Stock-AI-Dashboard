@@ -1,0 +1,19 @@
+'use client';
+import {useMemo,useState} from 'react';
+import {analyze,demoRows,evaluateAnswer,RULE_VERSION} from './research-engine.mjs';
+function download(value:unknown,name:string){const url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);}
+export default function ResearchLab(){
+ const [input,setInput]=useState(JSON.stringify(demoRows,null,2));
+ const [asOf,setAsOf]=useState('2026-08-12');
+ const [weights,setWeights]=useState([36,28,16,20]);
+ const [answer,setAnswer]=useState('公司经营现金流覆盖净利润，但估值与行业竞争仍存在风险，需结合原始财报核验。');
+ const [evidence,setEvidence]=useState('演示样本 DEMO-A；2026-Q2；经营现金流30，净利润24，金额单位一致。');
+ const result=useMemo(()=>{try{return {rows:analyze(JSON.parse(input),asOf,weights),error:''};}catch(e){return {rows:[],error:e instanceof Error?e.message:'数据格式错误'};}},[input,asOf,weights]);
+ const evaluation=evaluateAnswer(answer,evidence);
+ const valid=result.rows.filter(r=>r.score!==null);
+ return <section className="subpage research-lab"><span className="eyebrow">金融数据与评估工作台</span><h1>数据质检与因子实验</h1><p className="lead">导入 → 质量门禁 → 财务分析 → 权重实验 → 回答初筛 → 导出。默认数据为虚构样本，评分为研究启发式规则，不代表已验证预测能力。</p>
+ <div className="lab-grid"><article className="panel"><h2>数据导入与口径</h2><p>JSON数组，最多5000条；金额须统一币种、单位及报告周期。return20d使用小数。asOf代表数据可获得日期，不能晚于分析时点。</p><label>分析时点 <input type="date" value={asOf} onChange={e=>setAsOf(e.target.value)}/></label><label>导入JSON文件 <input type="file" accept=".json,application/json" onChange={async e=>{const f=e.target.files?.[0];if(f){if(f.size>2_000_000){setInput('文件超过2MB');return;}setInput(await f.text());}}}/></label><textarea aria-label="研究数据JSON" value={input} onChange={e=>setInput(e.target.value)} spellCheck={false}/><button onClick={()=>setInput(JSON.stringify(demoRows,null,2))}>恢复演示样本</button><button onClick={()=>download(demoRows,'research-template.json')}>下载数据模板</button>{result.error&&<p role="alert">{result.error}</p>}</article>
+ <article className="panel"><h2>因子权重实验</h2><p>调整权重后重新归一化计算；存在质量问题的记录不参与评分。规则版本：{RULE_VERSION}</p>{['质量','趋势','事件','风险保护'].map((label,i)=><label key={label}>{label}：{weights[i]}<input aria-label={`${label}权重`} type="range" min="0" max="100" value={weights[i]} onChange={e=>setWeights(weights.map((v,j)=>i===j?Number(e.target.value):v))}/></label>)}<p>有效记录 {valid.length} / {result.rows.length}；待复核 {result.rows.length-valid.length}</p><p>质量 = 利润率×200 + 现金利润比×30；趋势 = 50 + 20日收益×200；风险保护扣除负债及高PE惩罚。各因子限制在0–100。</p><button disabled={!!result.error} onClick={()=>download({asOf,weights,ruleVersion:RULE_VERSION,results:result.rows},'research-analysis.json')}>导出分析与证据</button></article></div>
+ <article className="panel lab-table"><h2>财务分析与质量门禁</h2><p>利润率=净利润/营收；现金利润比=经营现金流/正净利润；负债率=负债/资产。异常数据不自动修补，进入人工复核。</p><table><thead><tr>{['标的','利润率','现金利润比','负债率','完整度','综合分','质量问题 / 来源'].map(x=><th key={x}>{x}</th>)}</tr></thead><tbody>{result.rows.map((r,i)=><tr key={i}><td>{r.code}</td><td>{r.margin===null?'—':`${(r.margin*100).toFixed(1)}%`}</td><td>{r.cash===null?'—':r.cash.toFixed(2)}</td><td>{r.leverage===null?'—':`${(r.leverage*100).toFixed(1)}%`}</td><td>{r.completeness}%</td><td>{r.score??'不评分'}</td><td>{r.issues.join('；')||'规则检查通过'}<small>{r.evidence.source} · {r.evidence.asOf}</small></td></tr>)}</tbody></table></article>
+ <article className="panel"><h2>金融回答评估与样本导出</h2><p>检查收益承诺、风险提示及证据缺失。规则通过不代表事实正确或符合全部监管要求，事实、推理及适当性需人工审核。本模块不调用外部大模型。</p><label>待评估回答<textarea value={answer} onChange={e=>setAnswer(e.target.value)}/></label><label>原始证据与来源<textarea value={evidence} onChange={e=>setEvidence(e.target.value)}/></label><p>{evaluation.verdict}</p><ul>{evaluation.flags.map(x=><li key={x}>{x}</li>)}</ul><button onClick={()=>download({answer,evidence,evaluation,reviewStatus:'pending',ruleVersion:RULE_VERSION},'financial-review-sample.json')}>导出待审核样本</button></article></section>;
+}
