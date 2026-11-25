@@ -21,7 +21,9 @@ test("server renders the evidence-first product", async () => {
   assert.match(html, /可验证股票研究助手/);
   assert.match(html, /研究驾驶舱/);
   assert.match(html, /信号校准/);
-  assert.match(html, /组合风险/);
+  assert.match(html, /数据质检/);
+  assert.match(html, /财务分析/);
+  assert.match(html, /解释与审核/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
